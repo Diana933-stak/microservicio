@@ -9,9 +9,19 @@ use Illuminate\Support\Collection;
 
 class RetroItemController
 {
+    private RetroItem $model;
+    private Sprint $sprintModel;
+
+    public function __construct()
+    {
+        $this->model = new RetroItem();
+        $this->sprintModel = new Sprint();
+    }
+
     public function listar(?int $sprintId = null, ?string $categoria = null): Collection
     {
-        $query = RetroItem::query()
+        $query = $this->model
+            ->query()
             ->with('sprint:id,nombre,fecha_inicio')
             ->orderByDesc('created_at')
             ->orderByDesc('id');
@@ -38,11 +48,16 @@ class RetroItemController
     {
         $sprint = $this->buscarSprint($sprintId);
 
-        return RetroItem::query()
+        return $this->model
+            ->query()
             ->with('sprint:id,nombre,fecha_inicio')
             ->where('categoria', 'accion')
             ->where('sprint_id', '<>', $sprintId)
-            ->whereHas('sprint', fn ($query) => $query->where('fecha_inicio', '<', $sprint->fecha_inicio))
+            ->whereHas(
+                'sprint',
+                fn ($query) =>
+                $query->where('fecha_inicio', '<', $sprint->fecha_inicio)
+            )
             ->orderByDesc(
                 Sprint::select('fecha_inicio')
                     ->whereColumn('sprints.id', 'retro_items.sprint_id')
@@ -56,16 +71,20 @@ class RetroItemController
     public function guardar(int $sprintId, array $data): RetroItem
     {
         $data['sprint_id'] = $sprintId;
+
         $this->validar($data);
 
-        return RetroItem::create($this->prepararDatos($data));
+        return $this->model->create($this->prepararDatos($data));
     }
 
     public function modificar(int $id, array $data): RetroItem
     {
         $item = $this->detalle($id);
+
         $this->validar($data);
+
         $item->fill($this->prepararDatos($data));
+
         $item->save();
 
         return $this->detalle($id);
@@ -76,10 +95,17 @@ class RetroItemController
         $item = $this->detalle($id);
 
         if ($item->categoria !== 'accion') {
-            throw new Exception('Solo las acciones pueden marcarse como cumplidas.', 422);
+            throw new Exception(
+                'Solo las acciones pueden marcarse como cumplidas.',
+                422
+            );
         }
 
-        $item->cumplida = filter_var($cumplida, FILTER_VALIDATE_BOOLEAN);
+        $item->cumplida = filter_var(
+            $cumplida,
+            FILTER_VALIDATE_BOOLEAN
+        );
+
         $item->save();
 
         return $this->detalle($id);
@@ -92,10 +118,15 @@ class RetroItemController
 
     public function detalle(int $id): RetroItem
     {
-        $item = RetroItem::with('sprint:id,nombre,fecha_inicio')->find($id);
+        $item = $this->model
+            ->with('sprint:id,nombre,fecha_inicio')
+            ->find($id);
 
         if (!$item) {
-            throw new Exception("El item {$id} no existe.", 404);
+            throw new Exception(
+                "El item {$id} no existe.",
+                404
+            );
         }
 
         return $item;
@@ -103,16 +134,35 @@ class RetroItemController
 
     private function validar(array $data): void
     {
-        if (empty($data['sprint_id']) || !Sprint::find((int) $data['sprint_id'])) {
-            throw new Exception('El sprint seleccionado no existe.', 422);
+        if (
+            empty($data['sprint_id']) ||
+            !$this->sprintModel->find((int) $data['sprint_id'])
+        ) {
+            throw new Exception(
+                'El sprint seleccionado no existe.',
+                422
+            );
         }
 
-        if (empty($data['categoria']) || !in_array($data['categoria'], RetroItem::CATEGORIAS, true)) {
-            throw new Exception('La categoria seleccionada no es válida.', 422);
+        if (
+            empty($data['categoria']) ||
+            !in_array(
+                $data['categoria'],
+                RetroItem::CATEGORIAS,
+                true
+            )
+        ) {
+            throw new Exception(
+                'La categoria seleccionada no es válida.',
+                422
+            );
         }
 
         if (empty(trim($data['descripcion'] ?? ''))) {
-            throw new Exception('La descripción es obligatoria.', 422);
+            throw new Exception(
+                'La descripción es obligatoria.',
+                422
+            );
         }
     }
 
@@ -123,7 +173,10 @@ class RetroItemController
             'categoria' => $data['categoria'],
             'descripcion' => trim($data['descripcion']),
             'cumplida' => $data['categoria'] === 'accion'
-                ? filter_var($data['cumplida'] ?? false, FILTER_VALIDATE_BOOLEAN)
+                ? filter_var(
+                    $data['cumplida'] ?? false,
+                    FILTER_VALIDATE_BOOLEAN
+                )
                 : null,
             'fecha_revision' => $data['fecha_revision'] ?? null,
         ];
@@ -131,10 +184,13 @@ class RetroItemController
 
     private function buscarSprint(int $id): Sprint
     {
-        $sprint = Sprint::find($id);
+        $sprint = $this->sprintModel->find($id);
 
         if (!$sprint) {
-            throw new Exception("El sprint {$id} no existe.", 404);
+            throw new Exception(
+                "El sprint {$id} no existe.",
+                404
+            );
         }
 
         return $sprint;
@@ -143,6 +199,7 @@ class RetroItemController
     private function formatear(RetroItem $item): RetroItem
     {
         $item->sprint_nombre = $item->sprint?->nombre;
+
         unset($item->sprint);
 
         return $item;
