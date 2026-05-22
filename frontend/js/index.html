@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registro de Retrospectivas Scrum</title>
+    <link rel="stylesheet" href="./css/base.css" />
+    <link rel="stylesheet" href="./css/modals.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Retrospectivas Scrum</p>
+        <h1>Registro de Retrospectivas</h1>
+      </div>
+      <button class="primary-button" id="btnNuevoSprint">+ Sprint</button>
+    </header>
+
+    <main class="layout">
+      <aside class="panel sprint-panel">
+        <div class="panel-title">
+          <h2>Sprints</h2>
+          <span id="totalSprints">0</span>
+        </div>
+        <div id="sprintList" class="sprint-list"></div>
+      </aside>
+
+      <section class="workspace">
+        <div class="current-sprint">
+          <div>
+            <p class="eyebrow">Sprint seleccionado</p>
+            <h2 id="selectedSprintName">Selecciona o crea un sprint</h2>
+            <p id="selectedSprintDates" class="muted">
+              Las retrospectivas se organizan por sprint.
+            </p>
+          </div>
+          <div class="actions">
+            <button class="secondary-button" id="btnEditarSprint" disabled>
+              Editar
+            </button>
+            <button class="danger-button" id="btnEliminarSprint" disabled>
+              Eliminar
+            </button>
+          </div>
+        </div>
+
+        <div class="form-panel">
+          <h3>Nuevo item de retrospectiva</h3>
+          <form id="itemForm" class="item-form">
+            <select id="categoria" required>
+              <option value="logro">Logro</option>
+              <option value="impedimento">Impedimento</option>
+              <option value="accion">Acción</option>
+              <option value="comentario">Comentario</option>
+              <option value="otro">Otro</option>
+            </select>
+            <input type="date" id="fechaRevision" title="Fecha de revisión" />
+            <textarea
+              id="descripcion"
+              rows="3"
+              placeholder="Describe el logro, impedimento, acción o comentario..."
+              required
+            ></textarea>
+            <button
+              class="primary-button"
+              type="submit"
+              id="btnGuardarItem"
+              disabled
+            >
+              Guardar item
+            </button>
+          </form>
+        </div>
+
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-filter="todos">Todos</button>
+          <button class="tab" data-filter="logro">Logros</button>
+          <button class="tab" data-filter="impedimento">Impedimentos</button>
+          <button class="tab" data-filter="accion">Acciones</button>
+          <button class="tab" data-filter="comentario">Comentarios</button>
+        </div>
+
+        <div class="content-grid">
+          <section>
+            <div class="section-heading">
+              <h3>Retrospectiva</h3>
+              <span id="totalItems">0 items</span>
+            </div>
+            <div id="itemsList" class="items-list empty">
+              No hay items registrados para este sprint.
+            </div>
+          </section>
+
+          <section>
+            <div class="section-heading">
+              <h3>Acciones anteriores</h3>
+              <span>Seguimiento</span>
+            </div>
+            <div id="previousActions" class="items-list empty">
+              Selecciona un sprint para revisar acciones previas.
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="sprintModal" class="modal">
+      <form method="dialog" class="modal-content" id="sprintForm">
+        <div class="modal-header">
+          <h2 id="modalTitle">Nuevo sprint</h2>
+          <button
+            class="icon-button"
+            value="cancel"
+            type="button"
+            id="btnCerrarModal"
+          >
+            ×
+          </button>
+        </div>
+        <label>
+          Nombre
+          <input
+            type="text"
+            id="sprintNombre"
+            placeholder="Sprint 1"
+            required
+          />
+        </label>
+        <label>
+          Fecha de inicio
+          <input type="date" id="fechaInicio" required />
+        </label>
+        <label>
+          Fecha de fin
+          <input type="date" id="fechaFin" required />
+        </label>
+        <div class="modal-actions">
+          <button
+            class="secondary-button"
+            value="cancel"
+            type="button"
+            id="btnCancelarModal"
+          >
+            Cancelar
+          </button>
+          <button class="primary-button" type="submit">Guardar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <script src="./js/modal.js"></script>
+    <script src="./js/retros.js"></script>
+  </body>
+</html>
